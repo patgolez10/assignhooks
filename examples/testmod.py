@@ -25,13 +25,16 @@ def fun():
     b = SampleClass()
     print('b.name', repr(b.name))
     print('b.cnt', b.cnt)
+    assert b.cnt == 0
 
     print('-- before assign to c')
     c = b
     print('c.name', repr(c.name))
     print('c.cnt', c.cnt)
+    assert c.cnt == 1
 
     print('-- before assing to d')
     d = c
     print('d.name', repr(d.name))
     print('d.cnt', d.cnt)
+    assert d.cnt == 2

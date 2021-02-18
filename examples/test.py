@@ -4,7 +4,9 @@
 # import assignhooks.transformer
 # assignhooks.transformer.debug = True
 
-import assignhooks.magic
+import assignhooks
+
+assignhooks.instrument.start()
 
 # following import(s) will be instrumented
 import testmod
@@ -12,12 +14,14 @@ import testmod
 print('======= WITH instrumentation ======')
 testmod.fun()
 
-# all imports are instrumented until this call is executed
-assignhooks.magic.restore_import()
+
+# all imports above are instrumented until this call is executed
+assignhooks.instrument.stop()
 
 # following imoprt(s) will NOT be instrumented
 # it is the same module actually, just with different name
 # so that python attempts to import it (else it will ignore it)
+# and differnt assertions for expected results when not instrumented
 import testmod2
 
 print('======= WITHOUT instrumentation ======')

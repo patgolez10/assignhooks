@@ -63,8 +63,7 @@ Checkout ``test.py`` and ``testmod.py`` under `examples` directory. ``test.py`` 
 
 1. Automatic patch
 
-Suppose that there is a `testmod.py` that contains a module to instrument. Just import 'assignhooks.magic' before the imports you want to instrument. To stop this behavior invoke `assignhooks.magic.restore()`
-
+Suppose that there is a `testmod.py` that contains a module to instrument. Importing 'assignhooks' gives access to 'assignhooks.instrument.start()'. It should be called before the imports you want to instrument. To stop this behavior invoke `assignhooks.instrument.stop()`
 
 
 Assuming `testmod.py` contains:
@@ -85,11 +84,13 @@ And ``<test.py>``
 
 .. code-block:: python
 
- import assignhooks.magic # instrument from now on
+ import assignhooks
+
+ assignhooks.instrument.start() # instrument from now on
 
  import testmod
 
- assignhooks.magic.restore() # stop instrumenting
+ assignhooks.instrument.stop() # stop instrumenting
 
 
 If executed:

@@ -2,7 +2,7 @@ from assignhooks.transformer import AssignTransformer
 from assignhooks.patch import patch_module
 import traceback
 
-__all__ = ['custom_import', 'restore_import']
+__all__ = ['custom_import', 'start', 'stop']
 
 debug = False
 
@@ -23,12 +23,13 @@ def custom_import(name, *args, **kwargs):
     return module
 
 
-def restore_import():
+def start():
     __builtins__.update(**dict(
-        __import__=origin_import
+        __import__=custom_import
     ))
 
 
-__builtins__.update(**dict(
-    __import__=custom_import
-))
+def stop():
+    __builtins__.update(**dict(
+        __import__=origin_import
+    ))
