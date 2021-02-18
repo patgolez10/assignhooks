@@ -1,6 +1,6 @@
 Metadata-Version: 1.1
 Name: assignhooks
-Version: 1.0.1
+Version: 1.0.2
 Summary: Instrument code to support obj.__preassign__ / obk.__postassign__ methods. Based on 'assign' package by ryankung
 Home-page: UNKNOWN
 Author: patgolez10
