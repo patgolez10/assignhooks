@@ -1,2 +1,3 @@
-include README.rst
-prune tests
+include README.rst examples/*
+prune .git
+exclude *.sh
