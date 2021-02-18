@@ -1,0 +1,177 @@
+Description
+=====================================
+
+``assignhooks`` allows you to instrument your python code so that assignments to a variable can execute an action before and/or after the fact. For instance:
+
+.. code-block:: python
+  
+ class SampleClass():
+
+    name = ''
+
+    def __assignpre__(self, lhs_name, rhs_name, rhs):
+        print('PRE: assigning %s = %s' % (lhs_name, rhs_name))
+        # modify rhs if needed before assignment
+        rhs.name = lhs_name
+        return rhs
+
+    def __assignpost__(self, lhs_name, rhs_name):
+        print('POST: lhs', self)
+        print('POST: lhs_name', lhs_name)
+        print('POST: rhs_name', rhs_name)
+        print('POST: assigning %s = %s' % (lhs_name, rhs_name))
+        self.name = lhs_name
+
+ b = SampleClass()
+ c = b
+
+
+The first assignment would generate a call to `__assignpost__` as `b` still has no contents so there is no information on its class and hence no way to find out if it has an `__assignpre__` method. `__assignpost__` allows `b` to find out its name in this case. In the example above b contains a `SampleClass` instance whose name is initialized to `b` (the variable name)
+
+In the second assignment, b is being assigned on the right-hand-side. As b is already existing we can check if its class provides an `__assignpre__` implementation. `b` knows is being assigned before the fact so we can used `__assignpre__` to check on the assignment or to provide the suitable value to be assigned (the return from `__assignpre__` method)
+
+Applications:
+===================
+
+* Can be used to add automatically names to created objects, for debug for instance:
+
+.. code-block:: python
+
+    class MyClass:
+        
+        def __init__(self, val, name=None):
+            self.val = val
+            self.name = name
+
+        def __assignpost__(self, lhs_name, rhs_name):
+            if self.name is None:
+                self.name = lhs_name
+
+   # will assign x.name as 'x' automatically
+   x = MyClass(val=4)
+   assert x.name == 'x'
+
+
+* Can be used to control what gets assigned when a specific instance of a class is assigned
+
+
+How to use it:
+===================
+
+Checkout ``test.py`` and ``testmod.py`` under `examples` directory. ``test.py`` contains an example of how to instrument and use ``testmod.py`` module (the module being object of instrumentation).
+
+
+1. Automatic patch
+
+Suppose that there is a `testmod.py` that contains a module to instrument. Just import 'assignhooks.magic' before the imports you want to instrument. To stop this behavior invoke `assignhooks.magic.restore()`
+
+
+
+Assuming `testmod.py` contains:
+
+``<testmod.py>``
+
+.. code-block:: python
+
+ class T():
+    def __assignpre__(self, lhs_name, rhs_name, rhs):
+        print('%s has been copied to %s' % (rhs_name, lhs_name))
+        return rhs
+
+ b = T()
+ c = b
+
+And ``<test.py>``
+
+.. code-block:: python
+
+ import assignhooks.magic # instrument from now on
+
+ import testmod
+
+ assignhooks.magic.restore() # stop instrumenting
+
+
+If executed:
+
+ `$ python3 ./test.py`
+
+will produce
+
+  `b has been copied to c`
+
+2. manually patch
+
+.. code-block:: python
+
+ from assignhooks.patch import patch_module
+ import testmod
+
+ patch_module(test)
+
+Install
+=======
+Just do:
+
+``pip3 install assignhooks``
+
+
+How does it work
+================
+
+Internally assignhooks.magic replaces __import__ by a new version that after the import patches the module AST tree. It performs the following transformations:
+
+.. code-block:: python
+
+ x = T()
+
+gets replaced by:
+
+.. code-block:: python
+
+ if True:
+     x = T()
+     if hasattr(x, '__assignpost__'):
+         x.__assignpost__('x', 'T')
+
+
+and
+
+.. code-block:: python
+
+ x = y
+
+gets replaced by:
+
+.. code-block:: python
+
+ if True:
+     if hasattr(y, '__assignpre__'):
+         x = y.__assignpre__('x', 'y', y)
+     else:
+         x = y
+     if hasattr(x, '__assignpost__'):
+         x.__assignpost__('x', 'y')
+
+
+NOTE: that ``if True:`` is only used to group the statements while doing node replacements in the AST.
+
+Notes
+=====
+
+* Tested with `Python 3.8.7` on MacOS
+
+Credits
+=======
+Based on original code from `assign <https://pypi.org/project/assign/>`_ module from  **ryankung**. Mainly adapted for my needs to handle object creation. Changes include:
+
+- Original had an ``__assign__`` overload only valid on existing objects (like ``__assignpre__``). Added ``__assignpost__`` to handle object creation cases 
+- Renamed ``__assign__`` to ``__assignpre__`` and added extra parameters
+
+
+Known Issues
+=============
+1. Won't work under `REPL`
+2. May slow down import operation. The effect in run-time is the replacement of raw assignments with conditional + assignment + hook
+3. May fail when patching standard modules
+

@@ -1,0 +1,45 @@
+-----------------
+To run:
+-----------------
+
+$ ./test.py
+
+-----------------
+Expected output:
+-----------------
+
+======= WITH instrumentation ======
+-- before assign to a
+a 1
+-- before assign to b
+POST: lhs <testmod.SampleClass object at 0x1093b8ca0>
+POST: assigning b = SampleClass
+b.name 'b'
+b.cnt 0
+-- before assign to c
+PRE: assigning c = b
+PRE: rhs= <testmod.SampleClass object at 0x1093b8ca0>
+POST: lhs <testmod.SampleClass object at 0x1093b8ca0>
+POST: assigning c = b
+c.name 'c'
+c.cnt 1
+-- before assing to d
+PRE: assigning d = c
+PRE: rhs= <testmod.SampleClass object at 0x1093b8ca0>
+POST: lhs <testmod.SampleClass object at 0x1093b8ca0>
+POST: assigning d = c
+d.name 'd'
+d.cnt 2
+======= WITHOUT instrumentation ======
+-- before assign to a
+a 1
+-- before assign to b
+b.name ''
+b.cnt 0
+-- before assign to c
+c.name ''
+c.cnt 0
+-- before assing to d
+d.name ''
+d.cnt 0
+
