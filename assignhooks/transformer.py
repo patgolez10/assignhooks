@@ -25,6 +25,57 @@ def node_name(node):
     return None
 
 
+def as_store(n):
+    if debug:
+        print('as_store n=', ast.dump(n))
+
+    new_n = n
+    if isinstance(n, ast.Name):
+        new_n = ast.Name(id=n.id, ctx=ast.Store())
+
+    elif isinstance(n, ast.Attribute):
+        # Attribute(value=Name(id='self', ctx=Load()), attr='name', ctx=Store())
+        if isinstance(n.ctx, ast.Load):
+            v = n.value
+            if isinstance(v, ast.Name):
+                new_n = ast.Attribute(
+                        value=ast.Name(id=v.id, ctx=ast.Load()),
+                        attr=n.attr,
+                        ctx=ast.Store())
+    else:
+        if debug:
+            print("warning: as_store, don't know how to handle", ast.dump(n))
+
+    if debug and (new_n is not n):
+        print('as_store new_n=', ast.dump(new_n))
+    return new_n
+
+
+def as_load(n):
+    if debug:
+        print('as_load n=', ast.dump(n))
+
+    new_n = n
+    if isinstance(n, ast.Name):
+        new_n = ast.Name(id=n.id, ctx=ast.Load())
+
+    elif isinstance(n, ast.Attribute):
+        # Attribute(value=Name(id='self', ctx=Load()), attr='name', ctx=Load())
+        v = n.value
+        if isinstance(v, ast.Name):
+            new_n = ast.Attribute(
+                    value=ast.Name(id=v.id, ctx=ast.Load()),
+                    attr=n.attr,
+                    ctx=ast.Load())
+    else:
+        if debug:
+            print("warning: as_load, don't know how to handle", ast.dump(n))
+
+    if debug and (new_n is not n):
+        print('as_load new_n=', ast.dump(new_n))
+    return new_n
+
+
 def gen_assign_name_checker_ast(node):
 
     assert isinstance(node.value, ast.Name)
@@ -52,7 +103,7 @@ def gen_assign_name_checker_ast(node):
             ),
             body=[
                 ast.Assign(
-                    targets=[ast.Name(id=lhs_target.id, ctx=ast.Store())],
+                    targets=[as_store(lhs_target)],
                     value=ast.Call(
                         func=ast.Attribute(
                             value=ast.Name(id=rhs_obj_name, ctx=ast.Load()),
@@ -60,9 +111,9 @@ def gen_assign_name_checker_ast(node):
                             ctx=ast.Load()
                         ),
                         args=[
-                            ast.Str(s=lhs_target.id),  # lhs_name
-                            ast.Str(s=rhs_obj_name),   # rhs_name
-                            node.value                 # rhs_value
+                            ast.Str(s=node_name(lhs_target)),  # lhs_name
+                            ast.Str(s=rhs_obj_name),           # rhs_name
+                            node.value                         # rhs_value
                          ],
                         keywords=[],
                         starargs=None,
@@ -75,7 +126,7 @@ def gen_assign_name_checker_ast(node):
             test=ast.Call(
                 func=ast.Name(id='hasattr', ctx=ast.Load()),
                 args=[
-                    ast.Name(id=node.targets[0].id, ctx=ast.Load()),
+                    as_load(node.targets[0]),
                     ast.Str(s='__assignpost__'),
                 ],
                 keywords=[],
@@ -86,12 +137,12 @@ def gen_assign_name_checker_ast(node):
               ast.Expr(
                 value=ast.Call(
                     func=ast.Attribute(
-                              value=ast.Name(id=lhs_target.id, ctx=ast.Load()),
+                              value=as_load(lhs_target),
                               attr='__assignpost__',
                               ctx=ast.Load()),
                     args=[
-                        ast.Str(s=lhs_target.id),         # lhs_name
-                        ast.Str(s=node_name(node.value))  # rhs_name
+                        ast.Str(s=node_name(lhs_target)),  # lhs_name
+                        ast.Str(s=node_name(node.value))   # rhs_name
                     ],
                     keywords=[]
                 )

@@ -2,9 +2,11 @@ from assignhooks.transformer import AssignTransformer
 from assignhooks.patch import patch_module
 import traceback
 
+debug = False
+
+
 __all__ = ['custom_import', 'start', 'stop']
 
-debug = False
 
 origin_import = __import__
 

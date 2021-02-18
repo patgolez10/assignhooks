@@ -1,6 +1,17 @@
 import ast
 from assignhooks.transformer import AssignTransformer
 
+try:
+    import astor   # convert ast to python for debug
+
+    def dump_tree(node):
+        print(astor.to_source(node))
+
+except ImportError:
+    def dump_tree(node):
+        print(ast.dump(node))
+
+
 __all__ = [
     'patch_node_ast',
     'patch_code_ast',
@@ -9,11 +20,16 @@ __all__ = [
     'patch_module'
 ]
 
+debug = False
+
 
 def patch_node_ast(node, trans=AssignTransformer):
     trans = trans()
     new_node = trans.visit(node)
     ast.fix_missing_locations(new_node)
+    if debug:
+        print('== After module patch')
+        dump_tree(new_node)
     return new_node
 
 
