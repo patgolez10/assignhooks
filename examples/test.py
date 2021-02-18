@@ -20,7 +20,7 @@ import testmod2
 
 # it is the same module actually, just with different name
 # so that python attempts to import it (else it will ignore it)
-# and differnt assertions for expected results when not instrumented
+# and different assertions for expected results when not instrumented
 
 print('======= WITHOUT instrumentation ======')
 testmod2.fun()
